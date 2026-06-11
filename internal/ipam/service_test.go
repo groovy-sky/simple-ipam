@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/netip"
 	"slices"
+	"strings"
 	"testing"
 )
 
@@ -407,7 +408,7 @@ func compareAddressText(left, right string) int {
 	leftAddr, leftErr := netip.ParseAddr(left)
 	rightAddr, rightErr := netip.ParseAddr(right)
 	if leftErr != nil || rightErr != nil {
-		return 0
+		return strings.Compare(left, right)
 	}
 	return compareAddr(leftAddr, rightAddr)
 }

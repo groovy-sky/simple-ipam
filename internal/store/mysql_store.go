@@ -367,8 +367,10 @@ AND (end_ipv6_hi > ? OR (end_ipv6_hi = ? AND end_ipv6_lo >= ?))`
 
 func argsWithRange(args []any, startIPv4, endIPv4 *uint32, startIPv6Hi, startIPv6Lo, endIPv6Hi, endIPv6Lo *uint64) []any {
 	if startIPv4 != nil && endIPv4 != nil {
+		// Match the placeholder order in `start_ipv4 <= ? AND end_ipv4 >= ?`.
 		return append(args, uint64(*endIPv4), uint64(*startIPv4))
 	}
+	// Match the placeholder order in the IPv6 lexicographic overlap predicate.
 	return append(args, *endIPv6Hi, *endIPv6Hi, *endIPv6Lo, *startIPv6Hi, *startIPv6Hi, *startIPv6Lo)
 }
 
