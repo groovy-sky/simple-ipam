@@ -7,21 +7,12 @@ Build a minimal, production-minded IPAM service with:
 - Overlap prevention for prefixes
 - Simple REST API
 
-Out of scope for MVP:
-- VRF, VLANs, RIR/ASN, RBAC/UI, advanced audit trails
-
----
-
 ## 2) Tech Stack
-- Go 1.22+
-- MySQL 8.4 (InnoDB)
-- HTTP: chi (or gin)
+- Go
+- MySQL
 - DB access: database/sql + sqlc
-- Migrations: golang-migrate
 - Validation/parsing: net/netip
-- Containerized local dev: Docker Compose
 
----
 
 ## 3) Architecture
 - `cmd/api`: service bootstrap
@@ -29,16 +20,13 @@ Out of scope for MVP:
 - `internal/ipam`: domain/service logic
 - `internal/store`: repository and SQLC-generated queries
 - `internal/util`: IP/CIDR conversion helpers
-- `migrations/`: schema and indexes
 
 Service rules:
 - Canonicalize all prefixes/IPs before write
 - Store both canonical text and numeric bounds
 - Use transactions + row locking for allocation
 
----
-
-## 4) Data Model (No VRF)
+## 4) Data Model
 ### Table: `prefixes`
 Fields:
 - id
@@ -71,8 +59,6 @@ Indexes/constraints:
 - Unique IP per family globally
 - FK index by prefix_id
 
----
-
 ## 5) API Endpoints
 - `POST /prefixes`
   - Create prefix after overlap validation
@@ -84,8 +70,6 @@ Indexes/constraints:
   - Allocate next available IP inside prefix
 - `GET /prefixes/{id}/ips`
   - List assigned IPs in prefix
-
----
 
 ## 6) Validation & Core Logic
 ### Prefix creation
@@ -115,8 +99,6 @@ Edge cases handled explicitly:
 - /127, /128 (IPv6)
 - Prefix with no usable host addresses
 
----
-
 ## 7) SQL Patterns
 ### IPv4 overlap detection
 Condition for overlap:
@@ -126,70 +108,3 @@ Condition for overlap:
 - `ip >= prefix.start AND ip <= prefix.end`
 
 IPv6 uses hi/lo lexicographic comparison via SQL predicates (or filtered in Go for MVP simplicity).
-
----
-
-## 8) Milestones
-### M1: Foundation (Day 1-2)
-- Project scaffold
-- Docker Compose (Go + MySQL)
-- Migrations + sqlc setup
-
-### M2: Prefixes (Day 2-3)
-- POST/GET prefixes
-- Canonicalization + overlap checks
-- Basic tests
-
-### M3: IP addresses (Day 3-4)
-- POST IP address
-- Prefix containment validation
-- GET prefix IPs
-
-### M4: Allocator (Day 4-5)
-- `allocate-ip` endpoint
-- Transaction locking + race tests
-
-### M5: Hardening (Day 5-6)
-- Error model
-- Input validation polish
-- Metrics/logging basics
-- README and runbook
-
----
-
-## 9) Testing Strategy
-- Unit tests:
-  - CIDR/IP parsing and normalization
-  - Bound conversions (v4/v6)
-  - overlap and containment helpers
-- Integration tests:
-  - DB-backed prefix create/reject-overlap
-  - IP insert uniqueness
-  - concurrent allocate-ip race checks
-
----
-
-## 10) Non-Goals (MVP)
-- Multi-tenant scoping (VRF)
-- UI frontend
-- Advanced search and reporting
-- Event bus/webhooks
-
----
-
-## 11) Post-MVP Roadmap
-- Add VRF support
-- Add bulk import/export
-- Add IP ranges/pools
-- Add auth/RBAC and audit logs
-- Optional Redis cache for hot allocation paths
-
----
-
-## 12) Definition of Done
-MVP is done when:
-- Prefix overlap prevention works for IPv4/IPv6
-- IP assignment and next-available allocation work reliably
-- Concurrency tests pass for allocator
-- Service runs with one command via Docker Compose
-- README includes setup, API examples, and constraints
